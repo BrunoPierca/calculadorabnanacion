@@ -2,20 +2,62 @@
 
 import React from "react"
 
-import { useState } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { fetchExchangeRate } from "@/lib/exchange-rate"
+import { DESTINOS, valorInicialUVA } from "@/lib/bna-mortgage"
+import { useBnaMortgage } from "@/hooks/use-bna-mortgage"
+import type { Destino } from "@/lib/bna-mortgage"
+
+const DESTINO_LABELS: Record<Destino, string> = {
+  [DESTINOS.ADQ1]: "Adquisición / cambio vivienda única",
+  [DESTINOS.CONST1]: "Construcción vivienda única",
+  [DESTINOS.CONST2]: "Construcción de segunda vivienda",
+  [DESTINOS.AMP1]: "Ampliación / refacción / terminación viv. única",
+  [DESTINOS.AMP2]: "Ampliación / refacción / terminación segunda vivienda",
+  [DESTINOS.ADQ2]: "Adquisición segunda vivienda",
+}
 
 export default function PropertyConverter() {
   const [exchangeRate, setExchangeRate] = useState(1500)
   const [exchangeRateDisplay, setExchangeRateDisplay] = useState("1.500")
+  const [exchangeRateLoading, setExchangeRateLoading] = useState(false)
   const [propertyPriceUSD, setPropertyPriceUSD] = useState<number | "">("")
   const [propertyPriceDisplay, setPropertyPriceDisplay] = useState("")
   const [downpaymentValue, setDownpaymentValue] = useState<number | "">("")
   const [downpaymentDisplay, setDownpaymentDisplay] = useState("")
   const [downpaymentCurrency, setDownpaymentCurrency] = useState<"ARS" | "USD">("ARS")
+
+  const [mortgageLoanAmountDisplay, setMortgageLoanAmountDisplay] = useState("")
+  const [destino, setDestino] = useState<Destino>(DESTINOS.ADQ1)
+  const [plazo, setPlazo] = useState(10)
+  const [cobraHaberesBNA, setCobraHaberesBNA] = useState<"Si" | "No">("Si")
+  const [adhiereOpcionTopeCVS, setAdhiereOpcionTopeCVS] = useState<"Si" | "No">("Si")
+  const [planDeCuotasOpen, setPlanDeCuotasOpen] = useState(false)
+
+  const handleRefreshRate = useCallback(async () => {
+    setExchangeRateLoading(true)
+    try {
+      const rate = await fetchExchangeRate()
+      setExchangeRate(rate)
+      setExchangeRateDisplay(new Intl.NumberFormat("de-DE").format(rate))
+    } finally {
+      setExchangeRateLoading(false)
+    }
+  }, [])
 
   const propertyPriceARS = propertyPriceUSD !== "" ? propertyPriceUSD * exchangeRate : 0
   
@@ -49,6 +91,20 @@ export default function PropertyConverter() {
     return new Intl.NumberFormat("de-DE").format(Number(cleaned))
   }
 
+  const loanAmountARS = mortgageLoanAmountDisplay
+    ? parseFormattedNumber(mortgageLoanAmountDisplay)
+    : remainingARS
+
+  const mortgageResult = useBnaMortgage({
+    valorViviendaPesos: propertyPriceARS,
+    montoPrestamoPesos: loanAmountARS,
+    plazo,
+    destino,
+    cobraHaberesBNA,
+    adhiereOpcionTopeCVS,
+    zonaPatagonica: "No",
+  })
+
   const handleExchangeRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatInputValue(e.target.value)
     setExchangeRateDisplay(formatted)
@@ -67,7 +123,30 @@ export default function PropertyConverter() {
     setDownpaymentValue(formatted ? parseFormattedNumber(formatted) : "")
   }
 
+  const handleMortgageLoanAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatInputValue(e.target.value)
+    setMortgageLoanAmountDisplay(formatted)
+  }
+
   const progressBarColor = coveragePercent >= 25 ? "bg-green-500" : "bg-red-500"
+
+  const canShowMortgage =
+    propertyPriceARS > 0 && loanAmountARS > 0 && mortgageResult.plazoOptions.includes(plazo)
+
+  useEffect(() => {
+    if (mortgageResult.topeCVSDisabled && adhiereOpcionTopeCVS === "Si") {
+      setAdhiereOpcionTopeCVS("No")
+    }
+  }, [mortgageResult.topeCVSDisabled, adhiereOpcionTopeCVS])
+
+  useEffect(() => {
+    if (
+      mortgageResult.plazoOptions.length > 0 &&
+      !mortgageResult.plazoOptions.includes(plazo)
+    ) {
+      setPlazo(mortgageResult.plazoOptions[0])
+    }
+  }, [destino, mortgageResult.plazoOptions, plazo])
 
   return (
     <main className="min-h-dvh bg-background p-4 md:p-6 overflow-auto">
@@ -83,7 +162,7 @@ export default function PropertyConverter() {
             <CardTitle className="text-base">Exchange Rate</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="text-muted-foreground">1 USD =</span>
               <Input
                 type="text"
@@ -93,6 +172,15 @@ export default function PropertyConverter() {
                 className="w-32"
               />
               <span className="text-muted-foreground">ARS</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleRefreshRate}
+                disabled={exchangeRateLoading}
+              >
+                {exchangeRateLoading ? "Loading…" : "Refresh rate"}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -148,7 +236,7 @@ export default function PropertyConverter() {
                   onChange={handleDownpaymentChange}
                   className="flex-1"
                 />
-                <Select value={downpaymentCurrency} onValueChange={(v) => setDownpaymentCurrency(v as "ARS" | "USD")}>
+                <Select value={downpaymentCurrency} onValueChange={(v: string) => setDownpaymentCurrency(v as "ARS" | "USD")}>
                   <SelectTrigger className="w-24">
                     <SelectValue />
                   </SelectTrigger>
@@ -216,6 +304,211 @@ export default function PropertyConverter() {
             ) : (
               <p className="text-sm text-muted-foreground py-4 text-center">
                 Enter property price and downpayment to see coverage
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Simulador Crédito UVA (BNA) */}
+        <Card id="mortgage-simulator" className="md:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Simulador Crédito UVA (BNA)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {propertyPriceARS > 0 ? (
+              <>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Valor vivienda (ARS)</Label>
+                    <p className="text-lg font-semibold">$ {formatNumber(propertyPriceARS)} ARS</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mortgage-loan-amount">Monto a solicitar (ARS)</Label>
+                    <Input
+                      id="mortgage-loan-amount"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder={remainingARS > 0 ? formatNumber(remainingARS) : "0"}
+                      value={mortgageLoanAmountDisplay}
+                      onChange={handleMortgageLoanAmountChange}
+                    />
+                    {!mortgageLoanAmountDisplay && remainingARS > 0 && (
+                      <p className="text-xs text-muted-foreground">Uses remaining to pay if empty</p>
+                    )}
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Destino</Label>
+                    <Select value={destino} onValueChange={(v: string) => setDestino(v as Destino)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(DESTINO_LABELS) as Destino[]).map((d) => (
+                          <SelectItem key={d} value={d}>
+                            {DESTINO_LABELS[d]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Plazo (años)</Label>
+                    <Select
+                      value={String(plazo)}
+                      onValueChange={(v: string) => setPlazo(Number(v))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {mortgageResult.plazoOptions.map((p) => (
+                          <SelectItem key={p} value={String(p)}>
+                            {p}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Titular/es cobra/n haberes en BNA</Label>
+                    <Select
+                      value={cobraHaberesBNA}
+                      onValueChange={(v: string) => setCobraHaberesBNA(v as "Si" | "No")}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Si">Sí</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Adhiere opción tope CVS</Label>
+                    <Select
+                      value={adhiereOpcionTopeCVS}
+                      onValueChange={(v: string) => setAdhiereOpcionTopeCVS(v as "Si" | "No")}
+                      disabled={mortgageResult.topeCVSDisabled}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Si">Sí</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {Object.keys(mortgageResult.validation.errors).length > 0 && (
+                  <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3">
+                    <p className="text-sm font-medium text-destructive">Errores de validación</p>
+                    <ul className="mt-1 list-inside list-disc text-sm text-destructive">
+                      {Object.entries(mortgageResult.validation.errors).map(([field, msg]) => (
+                        <li key={field}>{msg}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {canShowMortgage && mortgageResult.result && (
+                  <>
+                    <div className="grid gap-4 rounded-lg bg-muted p-4 md:grid-cols-2">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Detalles de préstamo</p>
+                        <ul className="mt-2 space-y-1 text-sm">
+                          <li>Prop. de apoyo: {Math.round(mortgageResult.result.form.ProporcionApoyo)}%</li>
+                          <li>Cuota en UVAs: {mortgageResult.result.primeraCuotaEnUva.toFixed(2)}</li>
+                          <li>Valor propiedad en UVA: {mortgageResult.result.form.ValorPropiedadEnUva.toFixed(2)}</li>
+                          <li>Monto inicial en UVA: {mortgageResult.result.form.MontoEnUva.toFixed(2)}</li>
+                          <li>Ingresos netos necesarios titulares y codeudores: $ {formatNumber(mortgageResult.result.ingresosNecesarioTitularesYCod)}</li>
+                          <li>Ingresos netos mínimos titulares: $ {formatNumber(mortgageResult.result.ingresosMinimosTitulares)}</li>
+                        </ul>
+                        <p className="mt-2 font-semibold">Cuota en $: $ {formatNumber(mortgageResult.result.primeraCuotaEnPesos)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Tasas y costos financieros</p>
+                        <ul className="mt-2 space-y-1 text-sm">
+                          <li>UVA: {valorInicialUVA.toFixed(2)}</li>
+                          <li>TNA: {mortgageResult.result.form.TNA.toFixed(2)}%</li>
+                          <li>TEM: {mortgageResult.result.form.TEM.toFixed(2)}%</li>
+                          <li>CFT TEM: {mortgageResult.result.plan.cft_tem.toFixed(2)}%</li>
+                          <li>CFT TNA: {mortgageResult.result.plan.cft_tna.toFixed(2)}%</li>
+                          <li>CFT TEA: {mortgageResult.result.plan.cft_tea.toFixed(2)}%</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    {mortgageResult.diferenciaCobraHaberesBNA != null &&
+                      mortgageResult.diferenciaCobraHaberesBNA !== 0 && (
+                      <div className="rounded-lg border-2 border-foreground/20 bg-muted p-4 text-center">
+                        <p className="font-bold">
+                          {cobraHaberesBNA === "No"
+                            ? `Si pasás tu sueldo al BNA, ¡ahorrás $ ${formatNumber(mortgageResult.diferenciaCobraHaberesBNA)} en tu cuota!`
+                            : `Por cobrar tu sueldo en el BNA, ¡estás ahorrando $ ${formatNumber(mortgageResult.diferenciaCobraHaberesBNA)} en tu cuota!`}
+                        </p>
+                      </div>
+                    )}
+
+                    <Collapsible open={planDeCuotasOpen} onOpenChange={setPlanDeCuotasOpen}>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          {planDeCuotasOpen ? "Ocultar" : "Ver"} plan de cuotas
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="mt-2 overflow-auto rounded-md border">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Cuota</TableHead>
+                                <TableHead>Saldo Capital UVA</TableHead>
+                                <TableHead>Capital UVA</TableHead>
+                                <TableHead>Interés UVA</TableHead>
+                                <TableHead>Prima UVA</TableHead>
+                                <TableHead>Cuota UVA</TableHead>
+                                <TableHead>Seguro</TableHead>
+                                <TableHead>Costo total UVA</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {mortgageResult.result.plan.cuotas
+                                .filter((c) => c.numeroCuota > 0)
+                                .map((c) => (
+                                  <TableRow key={c.numeroCuota}>
+                                    <TableCell>{c.numeroCuota}</TableCell>
+                                    <TableCell>{c.saldoCapitalEnUva.toFixed(2)}</TableCell>
+                                    <TableCell>{c.capitalCuotaEnUva.toFixed(2)}</TableCell>
+                                    <TableCell>{c.interesCuotaEnUva.toFixed(2)}</TableCell>
+                                    <TableCell>{c.primaCuotaEnUva.toFixed(2)}</TableCell>
+                                    <TableCell>{c.cuotaEnUva.toFixed(2)}</TableCell>
+                                    <TableCell>{c.seguroDeIncendioEnUva.toFixed(2)}</TableCell>
+                                    <TableCell>{c.costoTotalClienteEnUva.toFixed(2)}</TableCell>
+                                  </TableRow>
+                                ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </>
+                )}
+
+                {propertyPriceARS > 0 && loanAmountARS <= 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Ingresá monto a solicitar o usá el restante a pagar (ingresá propiedad y anticipo arriba).
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                Ingresá precio de propiedad para simular el crédito UVA
               </p>
             )}
           </CardContent>
