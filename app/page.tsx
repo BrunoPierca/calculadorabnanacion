@@ -150,8 +150,8 @@ export default function PropertyConverter() {
 
   return (
     <main className="min-h-dvh bg-background p-4 md:p-6 overflow-auto">
-      <header className="pb-6">
-        <h1 className="text-2xl font-bold text-foreground">Calculadora de Crédito UVA (BNA)</h1>
+      <header className="py-2 mb-2 bg-muted rounded-lg flex items-center ">
+        <h1 className="md:text-2xl text-xl font-bold text-foreground px-4">Calculadora de Crédito UVA (BNA)</h1>
       </header>
       <div className="mx-auto grid h-full gap-4 md:grid-cols-5">
 
@@ -173,15 +173,20 @@ export default function PropertyConverter() {
                   className="w-32"
                 />
                 <span className="text-muted-foreground">ARS</span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRefreshRate}
-                  disabled={exchangeRateLoading}
-                >
-                  {exchangeRateLoading ? "Loading…" : "Refresh rate"}
-                </Button>
+                <div className="flex w-full justify-between items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefreshRate}
+                    disabled={exchangeRateLoading}
+                  >
+                    {exchangeRateLoading ? "Cargando…" : "Actualizar tasa"}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">
+                    Cortesía de <a className="hover:underline" href="https://bluelytics.com.ar" target="_blank" rel="noopener noreferrer">Bluelytics</a>
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -283,19 +288,19 @@ export default function PropertyConverter() {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {coveragePercent >= 25 ? "Above 25% threshold" : "Below 25% threshold"}
+                      {coveragePercent >= 25 ? "Arriba del minimo (25%)" : "Debajo del minimo del (25%)"}
                     </p>
                   </div>
 
                   {/* Remaining */}
                   <div className="grid gap-3 grid-cols-2">
                     <div className="rounded-lg bg-muted p-3">
-                      <p className="text-xs text-muted-foreground">Remaining to pay</p>
+                      <p className="text-xs text-muted-foreground">Restante a pagar</p>
                       <p className="text-lg font-bold text-foreground">$ {formatNumber(remainingUSD)} USD</p>
                       <p className="text-xs text-muted-foreground">$ {formatNumber(remainingARS)} ARS</p>
                     </div>
                     <div className="rounded-lg bg-muted p-3">
-                      <p className="text-xs text-muted-foreground">Downpayment</p>
+                      <p className="text-xs text-muted-foreground">Anticipo</p>
                       <p className="text-lg font-bold text-foreground">$ {formatNumber(downpaymentInUSD)} USD</p>
                       <p className="text-xs text-muted-foreground">$ {formatNumber(downpaymentInARS)} ARS</p>
                     </div>
@@ -312,7 +317,7 @@ export default function PropertyConverter() {
           {/* Simulador Crédito UVA (BNA) */}
           <Card id="mortgage-simulator">
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Simulador Crédito UVA (BNA)</CardTitle>
+              <CardTitle className="text-base">Simulador Crédito UVA</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {propertyPriceARS > 0 ? (
@@ -350,7 +355,7 @@ export default function PropertyConverter() {
                     </div>
                   </div>
                   <div className="grid gap-4 md:grid-cols-3">
-                  <div className="space-y-2">
+                    <div className="space-y-2">
                       <Label>Plazo (años)</Label>
                       <Select
                         value={String(plazo)}
