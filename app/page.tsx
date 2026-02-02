@@ -21,6 +21,9 @@ import { fetchExchangeRate } from "@/lib/exchange-rate"
 import { DESTINOS, valorInicialUVA } from "@/lib/bna-mortgage"
 import { useBnaMortgage } from "@/hooks/use-bna-mortgage"
 import type { Destino } from "@/lib/bna-mortgage"
+import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { cn } from "@/lib/utils"
 
 const DESTINO_LABELS: Record<Destino, string> = {
   [DESTINOS.ADQ1]: "Adquisición / cambio vivienda única",
@@ -39,7 +42,7 @@ export default function PropertyConverter() {
   const [propertyPriceDisplay, setPropertyPriceDisplay] = useState("")
   const [downpaymentValue, setDownpaymentValue] = useState<number | "">("")
   const [downpaymentDisplay, setDownpaymentDisplay] = useState("")
-  const [downpaymentCurrency, setDownpaymentCurrency] = useState<"ARS" | "USD">("ARS")
+  const [downpaymentCurrency, setDownpaymentCurrency] = useState<"ARS" | "USD">("USD")
 
   const [mortgageLoanAmountDisplay, setMortgageLoanAmountDisplay] = useState("")
   const [destino, setDestino] = useState<Destino>(DESTINOS.ADQ1)
@@ -149,10 +152,13 @@ export default function PropertyConverter() {
   }, [destino, mortgageResult.plazoOptions, plazo])
 
   return (
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
     <main className="min-h-dvh bg-background p-4 md:p-6 overflow-auto">
-      <header className="py-2 mb-2 bg-muted rounded-lg flex items-center ">
-        <h1 className="md:text-2xl text-xl font-bold text-foreground px-4">Calculadora de Crédito UVA (BNA)</h1>
+      <header className="py-2 mb-2 bg-muted rounded-lg flex items-center dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 border flex-row justify-between">
+        <h1 className="md:text-2xl text-xl font-bold text-foreground px-4 ">Calculadora de Crédito UVA (BNA)</h1>
+        <ThemeToggle />
       </header>
+
       <div className="mx-auto grid h-full gap-4 md:grid-cols-5">
 
         {/* Left column: inputs */}
@@ -272,6 +278,9 @@ export default function PropertyConverter() {
         <div className="flex flex-col md:col-span-4 gap-4">
           {/* Coverage Summary */}
           <Card id="coverage-summary">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Resumen de cobertura</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-2">
               {propertyPriceUSD !== "" && downpaymentValue !== "" ? (
                 <>
@@ -308,18 +317,18 @@ export default function PropertyConverter() {
                 </>
               ) : (
                 <p className="text-sm text-muted-foreground py-4 text-center">
-                  Enter property price and downpayment to see coverage
+                  Ingresá precio de propiedad y anticipo para ver la cobertura
                 </p>
               )}
             </CardContent>
           </Card>
 
           {/* Simulador Crédito UVA (BNA) */}
-          <Card id="mortgage-simulator">
+          <Card id="mortgage-simulator" className="flex-1">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Simulador Crédito UVA</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className={cn("space-y-4 flex-1", propertyPriceARS > 0 ? "" : "flex justify-center items-center")}>
               {propertyPriceARS > 0 ? (
                 <>
                   <div className="grid gap-4 md:grid-cols-3">
@@ -407,9 +416,9 @@ export default function PropertyConverter() {
                   </div>
 
                   {Object.keys(mortgageResult.validation.errors).length > 0 && (
-                    <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3">
-                      <p className="text-sm font-medium text-destructive">Errores de validación</p>
-                      <ul className="mt-1 list-inside list-disc text-sm text-destructive">
+                    <div className="flex flex-col gap-2  rounded-lg border border-destructive/50 dark:border-destructive bg-destructive/10 dark:bg-destructive/30 p-3">
+                      <p className="text-sm font-medium text-destructive dark:text-destructive-foreground">Errores de validación</p>
+                      <ul className="mt-1 list-inside list-disc text-sm text-destructive dark:text-destructive-foreground">
                         {Object.entries(mortgageResult.validation.errors).map(([field, msg]) => (
                           <li key={field}>{msg}</li>
                         ))}
@@ -430,7 +439,13 @@ export default function PropertyConverter() {
                             <li>Ingresos netos necesarios titulares y codeudores: $ {formatNumber(mortgageResult.result.ingresosNecesarioTitularesYCod)}</li>
                             <li>Ingresos netos mínimos titulares: $ {formatNumber(mortgageResult.result.ingresosMinimosTitulares)}</li>
                           </ul>
-                          <p className="mt-2 font-semibold">Cuota en $: $ {formatNumber(mortgageResult.result.primeraCuotaEnPesos)}</p>
+                          <p className="mt-2 font-semibold">Cuota en pesos: $ {formatNumber(mortgageResult.result.primeraCuotaEnPesos)}</p>
+                          {mortgageResult.diferenciaCobraHaberesBNA != null &&
+                            mortgageResult.diferenciaCobraHaberesBNA !== 0 && <p className="mt-2 font-semibold">
+                              {cobraHaberesBNA === "No"
+                                ? `Si pasás tu sueldo al BNA, ¡ahorrás $ ${formatNumber(mortgageResult.diferenciaCobraHaberesBNA)} en tu cuota!`
+                                : `Por cobrar tu sueldo en el BNA, ¡estás ahorrando $ ${formatNumber(mortgageResult.diferenciaCobraHaberesBNA)} en tu cuota!`}
+                            </p>}
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Tasas y costos financieros</p>
@@ -516,5 +531,6 @@ export default function PropertyConverter() {
         </div>
       </div>
     </main>
+    </ThemeProvider>
   )
 }

@@ -655,7 +655,7 @@ export function validateMortgage(
     form.CobraHaberesBNA === SiNo.No
   ) {
     errors.AdhiereOpcionTopeCVS =
-      "Solo pueden adherir quienes cobran haberes BNA"
+      "Solo pueden adherir a CVS (opción tope de cuota) quienes cobran haberes BNA"
   }
   if (
     (form.Destino === DESTINOS.AMP1 || form.Destino === DESTINOS.AMP2) &&
