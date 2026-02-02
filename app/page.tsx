@@ -60,8 +60,8 @@ export default function PropertyConverter() {
   }, [])
 
   const propertyPriceARS = propertyPriceUSD !== "" ? propertyPriceUSD * exchangeRate : 0
-  
-  const downpaymentInARS = downpaymentValue !== "" 
+
+  const downpaymentInARS = downpaymentValue !== ""
     ? (downpaymentCurrency === "USD" ? downpaymentValue * exchangeRate : downpaymentValue)
     : 0
 
@@ -69,7 +69,7 @@ export default function PropertyConverter() {
     ? (downpaymentCurrency === "USD" ? downpaymentValue : downpaymentValue / exchangeRate)
     : 0
 
-  const coveragePercent = propertyPriceARS > 0 
+  const coveragePercent = propertyPriceARS > 0
     ? Math.min((downpaymentInARS / propertyPriceARS) * 100, 100)
     : 0
 
@@ -150,369 +150,365 @@ export default function PropertyConverter() {
 
   return (
     <main className="min-h-dvh bg-background p-4 md:p-6 overflow-auto">
-      <div className="mx-auto grid h-full max-w-4xl gap-4 md:grid-cols-2 md:grid-rows-[auto_1fr_1fr]">
-        <header className="md:col-span-2">
-          <h1 className="text-2xl font-bold text-foreground">Property Price Converter</h1>
-          <p className="text-sm text-muted-foreground">USD to Argentine Pesos conversion for property purchases</p>
-        </header>
+      <header className="pb-6">
+        <h1 className="text-2xl font-bold text-foreground">Calculadora de Crédito UVA (BNA)</h1>
+      </header>
+      <div className="mx-auto grid h-full gap-4 md:grid-cols-5">
 
-        {/* Exchange Rate */}
-        <Card id="exchange-rate" className="md:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Exchange Rate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-muted-foreground">1 USD =</span>
-              <Input
-                type="text"
-                inputMode="numeric"
-                value={exchangeRateDisplay}
-                onChange={handleExchangeRateChange}
-                className="w-32"
-              />
-              <span className="text-muted-foreground">ARS</span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleRefreshRate}
-                disabled={exchangeRateLoading}
-              >
-                {exchangeRateLoading ? "Loading…" : "Refresh rate"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Property Price */}
-        <Card id="property-price">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Property Price</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="property-price-input">Price in USD</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">$</span>
+        {/* Left column: inputs */}
+        <div className="flex flex-col gap-4">
+          {/* Exchange Rate */}
+          <Card id="exchange-rate">
+            <CardHeader className="">
+              <CardTitle className="text-base">Tipo de cambio</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-muted-foreground">1 USD =</span>
                 <Input
-                  id="property-price-input"
                   type="text"
                   inputMode="numeric"
-                  placeholder="100.000"
-                  value={propertyPriceDisplay}
-                  onChange={handlePropertyPriceChange}
+                  value={exchangeRateDisplay}
+                  onChange={handleExchangeRateChange}
+                  className="w-32"
                 />
-                <span className="text-muted-foreground">USD</span>
+                <span className="text-muted-foreground">ARS</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefreshRate}
+                  disabled={exchangeRateLoading}
+                >
+                  {exchangeRateLoading ? "Loading…" : "Refresh rate"}
+                </Button>
               </div>
-            </div>
-            {propertyPriceUSD !== "" && (
-              <div className="rounded-lg bg-muted p-3">
-                <p className="text-xs text-muted-foreground">Equivalent in Pesos</p>
-                <p className="text-xl font-bold text-foreground">
-                  $ {formatNumber(propertyPriceARS)} ARS
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Downpayment */}
-        <Card id="downpayment">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Downpayment</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="downpayment-input">Amount</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">$</span>
-                <Input
-                  id="downpayment-input"
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="25.000"
-                  value={downpaymentDisplay}
-                  onChange={handleDownpaymentChange}
-                  className="flex-1"
-                />
-                <Select value={downpaymentCurrency} onValueChange={(v: string) => setDownpaymentCurrency(v as "ARS" | "USD")}>
-                  <SelectTrigger className="w-24">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ARS">ARS</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {downpaymentValue !== "" && (
-              <div className="grid gap-2 rounded-lg bg-muted p-3 grid-cols-2">
-                <div>
-                  <p className="text-xs text-muted-foreground">In Pesos</p>
-                  <p className="text-sm font-semibold">$ {formatNumber(downpaymentInARS)} ARS</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">In Dollars</p>
-                  <p className="text-sm font-semibold">$ {formatNumber(downpaymentInUSD)} USD</p>
+          {/* Property Price */}
+          <Card id="property-price">
+            <CardHeader className="">
+              <CardTitle className="text-base">Precio de la propiedad</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">$</span>
+                  <Input
+                    id="property-price-input"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="100.000"
+                    value={propertyPriceDisplay}
+                    onChange={handlePropertyPriceChange}
+                  />
+                  <span className="text-muted-foreground">USD</span>
                 </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Coverage Summary */}
-        <Card id="coverage-summary" className="md:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Coverage Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {propertyPriceUSD !== "" && downpaymentValue !== "" ? (
-              <>
-                {/* Progress bar */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Downpayment covers</span>
-                    <span className="font-semibold text-foreground">{coveragePercent.toFixed(1)}%</span>
-                  </div>
-                  <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className={`h-full rounded-full transition-all duration-300 ${progressBarColor}`}
-                      style={{ width: `${coveragePercent}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {coveragePercent >= 25 ? "Above 25% threshold" : "Below 25% threshold"}
+              {propertyPriceUSD !== "" && (
+                <div className="rounded-lg bg-muted p-3">
+                  <p className="text-xs text-muted-foreground">Equivalente en Pesos</p>
+                  <p className="text-xl font-bold text-foreground">
+                    $ {formatNumber(propertyPriceARS)} ARS
                   </p>
                 </div>
+              )}
+            </CardContent>
+          </Card>
 
-                {/* Remaining */}
-                <div className="grid gap-3 grid-cols-2">
-                  <div className="rounded-lg bg-muted p-3">
-                    <p className="text-xs text-muted-foreground">Remaining to pay</p>
-                    <p className="text-lg font-bold text-foreground">$ {formatNumber(remainingUSD)} USD</p>
-                    <p className="text-xs text-muted-foreground">$ {formatNumber(remainingARS)} ARS</p>
+          {/* Downpayment */}
+          <Card id="downpayment">
+            <CardHeader className="">
+              <CardTitle className="text-base">Anticipo</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="downpayment-input">Monto</Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">$</span>
+                  <Input
+                    id="downpayment-input"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="25.000"
+                    value={downpaymentDisplay}
+                    onChange={handleDownpaymentChange}
+                    className="flex-1"
+                  />
+                  <Select value={downpaymentCurrency} onValueChange={(v: string) => setDownpaymentCurrency(v as "ARS" | "USD")}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ARS">ARS</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              {downpaymentValue !== "" && (
+                <div className="grid gap-2 rounded-lg bg-muted p-3 grid-cols-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground">En Pesos</p>
+                    <p className="text-sm font-semibold">$ {formatNumber(downpaymentInARS)} ARS</p>
                   </div>
-                  <div className="rounded-lg bg-muted p-3">
-                    <p className="text-xs text-muted-foreground">Downpayment</p>
-                    <p className="text-lg font-bold text-foreground">$ {formatNumber(downpaymentInUSD)} USD</p>
-                    <p className="text-xs text-muted-foreground">$ {formatNumber(downpaymentInARS)} ARS</p>
+                  <div>
+                    <p className="text-xs text-muted-foreground">En Dólares</p>
+                    <p className="text-sm font-semibold">$ {formatNumber(downpaymentInUSD)} USD</p>
                   </div>
                 </div>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                Enter property price and downpayment to see coverage
-              </p>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Simulador Crédito UVA (BNA) */}
-        <Card id="mortgage-simulator" className="md:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Simulador Crédito UVA (BNA)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {propertyPriceARS > 0 ? (
-              <>
-                <div className="grid gap-4 md:grid-cols-2">
+        {/* Right column: summary and simulator */}
+        <div className="flex flex-col md:col-span-4 gap-4">
+          {/* Coverage Summary */}
+          <Card id="coverage-summary">
+            <CardContent className="space-y-2">
+              {propertyPriceUSD !== "" && downpaymentValue !== "" ? (
+                <>
+                  {/* Progress bar */}
                   <div className="space-y-2">
-                    <Label>Valor vivienda (ARS)</Label>
-                    <p className="text-lg font-semibold">$ {formatNumber(propertyPriceARS)} ARS</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="mortgage-loan-amount">Monto a solicitar (ARS)</Label>
-                    <Input
-                      id="mortgage-loan-amount"
-                      type="text"
-                      inputMode="numeric"
-                      placeholder={remainingARS > 0 ? formatNumber(remainingARS) : "0"}
-                      value={mortgageLoanAmountDisplay}
-                      onChange={handleMortgageLoanAmountChange}
-                    />
-                    {!mortgageLoanAmountDisplay && remainingARS > 0 && (
-                      <p className="text-xs text-muted-foreground">Uses remaining to pay if empty</p>
-                    )}
-                  </div>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Destino</Label>
-                    <Select value={destino} onValueChange={(v: string) => setDestino(v as Destino)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(Object.keys(DESTINO_LABELS) as Destino[]).map((d) => (
-                          <SelectItem key={d} value={d}>
-                            {DESTINO_LABELS[d]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Plazo (años)</Label>
-                    <Select
-                      value={String(plazo)}
-                      onValueChange={(v: string) => setPlazo(Number(v))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mortgageResult.plazoOptions.map((p) => (
-                          <SelectItem key={p} value={String(p)}>
-                            {p}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Titular/es cobra/n haberes en BNA</Label>
-                    <Select
-                      value={cobraHaberesBNA}
-                      onValueChange={(v: string) => setCobraHaberesBNA(v as "Si" | "No")}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Si">Sí</SelectItem>
-                        <SelectItem value="No">No</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Adhiere opción tope CVS</Label>
-                    <Select
-                      value={adhiereOpcionTopeCVS}
-                      onValueChange={(v: string) => setAdhiereOpcionTopeCVS(v as "Si" | "No")}
-                      disabled={mortgageResult.topeCVSDisabled}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Si">Sí</SelectItem>
-                        <SelectItem value="No">No</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {Object.keys(mortgageResult.validation.errors).length > 0 && (
-                  <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3">
-                    <p className="text-sm font-medium text-destructive">Errores de validación</p>
-                    <ul className="mt-1 list-inside list-disc text-sm text-destructive">
-                      {Object.entries(mortgageResult.validation.errors).map(([field, msg]) => (
-                        <li key={field}>{msg}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {canShowMortgage && mortgageResult.result && (
-                  <>
-                    <div className="grid gap-4 rounded-lg bg-muted p-4 md:grid-cols-2">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Detalles de préstamo</p>
-                        <ul className="mt-2 space-y-1 text-sm">
-                          <li>Prop. de apoyo: {Math.round(mortgageResult.result.form.ProporcionApoyo)}%</li>
-                          <li>Cuota en UVAs: {mortgageResult.result.primeraCuotaEnUva.toFixed(2)}</li>
-                          <li>Valor propiedad en UVA: {mortgageResult.result.form.ValorPropiedadEnUva.toFixed(2)}</li>
-                          <li>Monto inicial en UVA: {mortgageResult.result.form.MontoEnUva.toFixed(2)}</li>
-                          <li>Ingresos netos necesarios titulares y codeudores: $ {formatNumber(mortgageResult.result.ingresosNecesarioTitularesYCod)}</li>
-                          <li>Ingresos netos mínimos titulares: $ {formatNumber(mortgageResult.result.ingresosMinimosTitulares)}</li>
-                        </ul>
-                        <p className="mt-2 font-semibold">Cuota en $: $ {formatNumber(mortgageResult.result.primeraCuotaEnPesos)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Tasas y costos financieros</p>
-                        <ul className="mt-2 space-y-1 text-sm">
-                          <li>UVA: {valorInicialUVA.toFixed(2)}</li>
-                          <li>TNA: {mortgageResult.result.form.TNA.toFixed(2)}%</li>
-                          <li>TEM: {mortgageResult.result.form.TEM.toFixed(2)}%</li>
-                          <li>CFT TEM: {mortgageResult.result.plan.cft_tem.toFixed(2)}%</li>
-                          <li>CFT TNA: {mortgageResult.result.plan.cft_tna.toFixed(2)}%</li>
-                          <li>CFT TEA: {mortgageResult.result.plan.cft_tea.toFixed(2)}%</li>
-                        </ul>
-                      </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-base">Cobertura del anticipo</span>
+                      <span className="font-semibold text-foreground">{coveragePercent.toFixed(1)}%</span>
                     </div>
+                    <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${progressBarColor}`}
+                        style={{ width: `${coveragePercent}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {coveragePercent >= 25 ? "Above 25% threshold" : "Below 25% threshold"}
+                    </p>
+                  </div>
 
-                    {mortgageResult.diferenciaCobraHaberesBNA != null &&
-                      mortgageResult.diferenciaCobraHaberesBNA !== 0 && (
-                      <div className="rounded-lg border-2 border-foreground/20 bg-muted p-4 text-center">
-                        <p className="font-bold">
-                          {cobraHaberesBNA === "No"
-                            ? `Si pasás tu sueldo al BNA, ¡ahorrás $ ${formatNumber(mortgageResult.diferenciaCobraHaberesBNA)} en tu cuota!`
-                            : `Por cobrar tu sueldo en el BNA, ¡estás ahorrando $ ${formatNumber(mortgageResult.diferenciaCobraHaberesBNA)} en tu cuota!`}
-                        </p>
-                      </div>
-                    )}
+                  {/* Remaining */}
+                  <div className="grid gap-3 grid-cols-2">
+                    <div className="rounded-lg bg-muted p-3">
+                      <p className="text-xs text-muted-foreground">Remaining to pay</p>
+                      <p className="text-lg font-bold text-foreground">$ {formatNumber(remainingUSD)} USD</p>
+                      <p className="text-xs text-muted-foreground">$ {formatNumber(remainingARS)} ARS</p>
+                    </div>
+                    <div className="rounded-lg bg-muted p-3">
+                      <p className="text-xs text-muted-foreground">Downpayment</p>
+                      <p className="text-lg font-bold text-foreground">$ {formatNumber(downpaymentInUSD)} USD</p>
+                      <p className="text-xs text-muted-foreground">$ {formatNumber(downpaymentInARS)} ARS</p>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  Enter property price and downpayment to see coverage
+                </p>
+              )}
+            </CardContent>
+          </Card>
 
-                    <Collapsible open={planDeCuotasOpen} onOpenChange={setPlanDeCuotasOpen}>
-                      <CollapsibleTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          {planDeCuotasOpen ? "Ocultar" : "Ver"} plan de cuotas
-                        </Button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <div className="mt-2 overflow-auto rounded-md border">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Cuota</TableHead>
-                                <TableHead>Saldo Capital UVA</TableHead>
-                                <TableHead>Capital UVA</TableHead>
-                                <TableHead>Interés UVA</TableHead>
-                                <TableHead>Prima UVA</TableHead>
-                                <TableHead>Cuota UVA</TableHead>
-                                <TableHead>Seguro</TableHead>
-                                <TableHead>Costo total UVA</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {mortgageResult.result.plan.cuotas
-                                .filter((c) => c.numeroCuota > 0)
-                                .map((c) => (
-                                  <TableRow key={c.numeroCuota}>
-                                    <TableCell>{c.numeroCuota}</TableCell>
-                                    <TableCell>{c.saldoCapitalEnUva.toFixed(2)}</TableCell>
-                                    <TableCell>{c.capitalCuotaEnUva.toFixed(2)}</TableCell>
-                                    <TableCell>{c.interesCuotaEnUva.toFixed(2)}</TableCell>
-                                    <TableCell>{c.primaCuotaEnUva.toFixed(2)}</TableCell>
-                                    <TableCell>{c.cuotaEnUva.toFixed(2)}</TableCell>
-                                    <TableCell>{c.seguroDeIncendioEnUva.toFixed(2)}</TableCell>
-                                    <TableCell>{c.costoTotalClienteEnUva.toFixed(2)}</TableCell>
-                                  </TableRow>
-                                ))}
-                            </TableBody>
-                          </Table>
+          {/* Simulador Crédito UVA (BNA) */}
+          <Card id="mortgage-simulator">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Simulador Crédito UVA (BNA)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {propertyPriceARS > 0 ? (
+                <>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label>Valor vivienda (ARS)</Label>
+                      <p className="text-lg font-semibold">$ {formatNumber(propertyPriceARS)} ARS</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="mortgage-loan-amount">Monto a solicitar (ARS)</Label>
+                      <Input
+                        id="mortgage-loan-amount"
+                        type="text"
+                        inputMode="numeric"
+                        placeholder={remainingARS > 0 ? formatNumber(remainingARS) : "0"}
+                        value={mortgageLoanAmountDisplay}
+                        onChange={handleMortgageLoanAmountChange}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Destino</Label>
+                      <Select value={destino} onValueChange={(v: string) => setDestino(v as Destino)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(Object.keys(DESTINO_LABELS) as Destino[]).map((d) => (
+                            <SelectItem key={d} value={d}>
+                              {DESTINO_LABELS[d]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-2">
+                      <Label>Plazo (años)</Label>
+                      <Select
+                        value={String(plazo)}
+                        onValueChange={(v: string) => setPlazo(Number(v))}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {mortgageResult.plazoOptions.map((p) => (
+                            <SelectItem key={p} value={String(p)}>
+                              {p}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Titular/es cobra/n haberes en BNA</Label>
+                      <Select
+                        value={cobraHaberesBNA}
+                        onValueChange={(v: string) => setCobraHaberesBNA(v as "Si" | "No")}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Si">Sí</SelectItem>
+                          <SelectItem value="No">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Adhiere opción tope CVS</Label>
+                      <Select
+                        value={adhiereOpcionTopeCVS}
+                        onValueChange={(v: string) => setAdhiereOpcionTopeCVS(v as "Si" | "No")}
+                        disabled={mortgageResult.topeCVSDisabled}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Si">Sí</SelectItem>
+                          <SelectItem value="No">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {Object.keys(mortgageResult.validation.errors).length > 0 && (
+                    <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3">
+                      <p className="text-sm font-medium text-destructive">Errores de validación</p>
+                      <ul className="mt-1 list-inside list-disc text-sm text-destructive">
+                        {Object.entries(mortgageResult.validation.errors).map(([field, msg]) => (
+                          <li key={field}>{msg}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {canShowMortgage && mortgageResult.result && (
+                    <>
+                      <div className="grid gap-4 rounded-lg bg-muted p-4 md:grid-cols-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Detalles de préstamo</p>
+                          <ul className="mt-2 space-y-1 text-sm">
+                            <li>Prop. de apoyo: {Math.round(mortgageResult.result.form.ProporcionApoyo)}%</li>
+                            <li>Cuota en UVAs: {mortgageResult.result.primeraCuotaEnUva.toFixed(2)}</li>
+                            <li>Valor propiedad en UVA: {mortgageResult.result.form.ValorPropiedadEnUva.toFixed(2)}</li>
+                            <li>Monto inicial en UVA: {mortgageResult.result.form.MontoEnUva.toFixed(2)}</li>
+                            <li>Ingresos netos necesarios titulares y codeudores: $ {formatNumber(mortgageResult.result.ingresosNecesarioTitularesYCod)}</li>
+                            <li>Ingresos netos mínimos titulares: $ {formatNumber(mortgageResult.result.ingresosMinimosTitulares)}</li>
+                          </ul>
+                          <p className="mt-2 font-semibold">Cuota en $: $ {formatNumber(mortgageResult.result.primeraCuotaEnPesos)}</p>
                         </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  </>
-                )}
+                        <div>
+                          <p className="text-xs text-muted-foreground">Tasas y costos financieros</p>
+                          <ul className="mt-2 space-y-1 text-sm">
+                            <li>UVA: {valorInicialUVA.toFixed(2)}</li>
+                            <li>TNA: {mortgageResult.result.form.TNA.toFixed(2)}%</li>
+                            <li>TEM: {mortgageResult.result.form.TEM.toFixed(2)}%</li>
+                            <li>CFT TEM: {mortgageResult.result.plan.cft_tem.toFixed(2)}%</li>
+                            <li>CFT TNA: {mortgageResult.result.plan.cft_tna.toFixed(2)}%</li>
+                            <li>CFT TEA: {mortgageResult.result.plan.cft_tea.toFixed(2)}%</li>
+                          </ul>
+                        </div>
+                      </div>
 
-                {propertyPriceARS > 0 && loanAmountARS <= 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    Ingresá monto a solicitar o usá el restante a pagar (ingresá propiedad y anticipo arriba).
-                  </p>
-                )}
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                Ingresá precio de propiedad para simular el crédito UVA
-              </p>
-            )}
-          </CardContent>
-        </Card>
+                      {/* {mortgageResult.diferenciaCobraHaberesBNA != null &&
+                        mortgageResult.diferenciaCobraHaberesBNA !== 0 && (
+                          <div className="rounded-lg border-2 border-foreground/20 bg-muted p-4 text-center">
+                            <p className="font-bold">
+                              {cobraHaberesBNA === "No"
+                                ? `Si pasás tu sueldo al BNA, ¡ahorrás $ ${formatNumber(mortgageResult.diferenciaCobraHaberesBNA)} en tu cuota!`
+                                : `Por cobrar tu sueldo en el BNA, ¡estás ahorrando $ ${formatNumber(mortgageResult.diferenciaCobraHaberesBNA)} en tu cuota!`}
+                            </p>
+                          </div>
+                        )} */}
+
+                      <Collapsible open={planDeCuotasOpen} onOpenChange={setPlanDeCuotasOpen}>
+                        <CollapsibleTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            {planDeCuotasOpen ? "Ocultar" : "Ver"} plan de cuotas
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="mt-2 overflow-auto rounded-md border">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Cuota</TableHead>
+                                  <TableHead>Saldo Capital UVA</TableHead>
+                                  <TableHead>Capital UVA</TableHead>
+                                  <TableHead>Interés UVA</TableHead>
+                                  <TableHead>Prima UVA</TableHead>
+                                  <TableHead>Cuota UVA</TableHead>
+                                  <TableHead>Seguro</TableHead>
+                                  <TableHead>Costo total UVA</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {mortgageResult.result.plan.cuotas
+                                  .filter((c) => c.numeroCuota > 0)
+                                  .map((c) => (
+                                    <TableRow key={c.numeroCuota}>
+                                      <TableCell>{c.numeroCuota}</TableCell>
+                                      <TableCell>{c.saldoCapitalEnUva.toFixed(2)}</TableCell>
+                                      <TableCell>{c.capitalCuotaEnUva.toFixed(2)}</TableCell>
+                                      <TableCell>{c.interesCuotaEnUva.toFixed(2)}</TableCell>
+                                      <TableCell>{c.primaCuotaEnUva.toFixed(2)}</TableCell>
+                                      <TableCell>{c.cuotaEnUva.toFixed(2)}</TableCell>
+                                      <TableCell>{c.seguroDeIncendioEnUva.toFixed(2)}</TableCell>
+                                      <TableCell>{c.costoTotalClienteEnUva.toFixed(2)}</TableCell>
+                                    </TableRow>
+                                  ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </>
+                  )}
+
+                  {propertyPriceARS > 0 && loanAmountARS <= 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Ingresá monto a solicitar o usá el restante a pagar (ingresá propiedad y anticipo arriba).
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  Ingresá precio de propiedad para simular el crédito UVA
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </main>
   )
